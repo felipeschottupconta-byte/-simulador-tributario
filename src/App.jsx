@@ -103,7 +103,8 @@ function StatCard({ label, value, tone }) {
   );
 }
 
-function MemoriaCompleta({ title, icms, base, icmsDestacado, g, f }) {
+function MemoriaCompleta({ title, icms, base, icmsDestacado, icmsValor, g, f }) {
+  const aliq = (v) => (base > 0 ? fmtPct((v / base) * 100) : "—");
   return (
     <details className="memoria" open>
       <summary>
@@ -140,6 +141,7 @@ function MemoriaCompleta({ title, icms, base, icmsDestacado, g, f }) {
           {fmtBRL(f.irpjAdicional)}
         </div>
         <div className="memoria-line memoria-total">IRPJ total = {fmtBRL(f.irpjTotal)}</div>
+        <div className="memoria-line-hint">alíquota efetiva IRPJ (s/ faturamento) = {aliq(f.irpjTotal)}</div>
 
         <div className="memoria-line memoria-gap">
           Base CSLL = {fmtBRL(base - f.excedente)} × {g.presuncaoCSLL}%
@@ -149,6 +151,7 @@ function MemoriaCompleta({ title, icms, base, icmsDestacado, g, f }) {
         <div className="memoria-line memoria-total">
           CSLL (9%) = {fmtBRL(f.baseCSLL)} × 9% = {fmtBRL(f.csll)}
         </div>
+        <div className="memoria-line-hint">alíquota efetiva CSLL (s/ faturamento) = {aliq(f.csll)}</div>
 
         <div className="memoria-line memoria-gap">
           Base PIS/COFINS = {fmtBRL(base)} − {fmtBRL(icmsDestacado)} (ICMS destacado) ={" "}
@@ -158,9 +161,23 @@ function MemoriaCompleta({ title, icms, base, icmsDestacado, g, f }) {
         <div className="memoria-line">
           PIS = {fmtBRL(f.basePisCofins)} × 0,65% = {fmtBRL(f.pis)}
         </div>
+        <div className="memoria-line-hint">alíquota efetiva PIS (s/ faturamento) = {aliq(f.pis)}</div>
         <div className="memoria-line memoria-total">
           COFINS = {fmtBRL(f.basePisCofins)} × 3% = {fmtBRL(f.cofins)}
         </div>
+        <div className="memoria-line-hint">alíquota efetiva COFINS (s/ faturamento) = {aliq(f.cofins)}</div>
+
+        {icmsValor !== undefined && (
+          <>
+            <div className="memoria-line memoria-section-title memoria-gap">Alíquotas efetivas (sobre faturamento)</div>
+            <div className="memoria-line">ICMS (líquido + DIFAL) = {aliq(icmsValor)}</div>
+            <div className="memoria-line">IRPJ = {aliq(f.irpjTotal)}</div>
+            <div className="memoria-line">CSLL = {aliq(f.csll)}</div>
+            <div className="memoria-line">PIS = {aliq(f.pis)}</div>
+            <div className="memoria-line">COFINS = {aliq(f.cofins)}</div>
+            <div className="memoria-line memoria-total">TOTAL = {aliq(icmsValor + f.total)}</div>
+          </>
+        )}
       </div>
     </details>
   );
@@ -826,6 +843,7 @@ export default function App() {
                 title="Memória de cálculo — Cenário 1 (ICMS + federais)"
                 base={c1.faturamento}
                 icmsDestacado={r1.debitoIcms}
+                icmsValor={r1.icmsLiquido + r1.difal}
                 g={global_}
                 f={r1.federais}
                 icms={
@@ -921,6 +939,7 @@ export default function App() {
                 title="Memória de cálculo — Cenário 2 (ICMS + federais)"
                 base={c2.valorVenda}
                 icmsDestacado={r2.debitoVendaFilial}
+                icmsValor={r2.icmsGrupo}
                 g={global_}
                 f={r2.federais}
                 icms={
@@ -1024,6 +1043,7 @@ export default function App() {
                 title="Memória de cálculo — Cenário 3 (ICMS + federais)"
                 base={c3.valorVenda}
                 icmsDestacado={r3.debitoVendaFilial}
+                icmsValor={r3.icmsGrupo}
                 g={global_}
                 f={r3.federais}
                 icms={
@@ -1141,6 +1161,7 @@ export default function App() {
                 title="Memória de cálculo — Cenário 4 (RioComex, ICMS + federais)"
                 base={c4.valorVenda}
                 icmsDestacado={r4.debitoSaida}
+                icmsValor={r4.icmsRecolher}
                 g={global_}
                 f={r4.federais}
                 icms={
