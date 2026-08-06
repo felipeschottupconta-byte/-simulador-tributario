@@ -179,10 +179,10 @@ export default function App() {
   });
 
   const [c1, setC1] = useState({
-    faturamento: 500000,
+    faturamento: 249581.75,
     icmsSaida: 11.8,
     difal: 8.09,
-    compras: 0,
+    compras: 33742.23,
     icmsCompra: 4,
   });
 
