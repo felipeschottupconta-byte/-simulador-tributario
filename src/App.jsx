@@ -103,7 +103,7 @@ function StatCard({ label, value, tone }) {
   );
 }
 
-function MemoriaCompleta({ title, icms, base, icmsDestacado, icmsValor, g, f }) {
+function MemoriaCompleta({ title, icms, base, icmsDestacado, icmsValor, difalValor, g, f }) {
   const aliq = (v) => (base > 0 ? fmtPct((v / base) * 100) : "—");
   return (
     <details className="memoria" open>
@@ -170,12 +170,13 @@ function MemoriaCompleta({ title, icms, base, icmsDestacado, icmsValor, g, f }) 
         {icmsValor !== undefined && (
           <>
             <div className="memoria-line memoria-section-title memoria-gap">Alíquotas efetivas (sobre faturamento)</div>
-            <div className="memoria-line">ICMS (líquido + DIFAL) = {aliq(icmsValor)}</div>
+            <div className="memoria-line">ICMS = {aliq(icmsValor)}</div>
+            <div className="memoria-line">DIFAL = {aliq(difalValor)}</div>
             <div className="memoria-line">IRPJ = {aliq(f.irpjTotal)}</div>
             <div className="memoria-line">CSLL = {aliq(f.csll)}</div>
             <div className="memoria-line">PIS = {aliq(f.pis)}</div>
             <div className="memoria-line">COFINS = {aliq(f.cofins)}</div>
-            <div className="memoria-line memoria-total">TOTAL = {aliq(icmsValor + f.total)}</div>
+            <div className="memoria-line memoria-total">TOTAL = {aliq(icmsValor + difalValor + f.total)}</div>
           </>
         )}
       </div>
@@ -843,7 +844,8 @@ export default function App() {
                 title="Memória de cálculo — Cenário 1 (ICMS + federais)"
                 base={c1.faturamento}
                 icmsDestacado={r1.debitoIcms}
-                icmsValor={r1.icmsLiquido + r1.difal}
+                icmsValor={r1.icmsLiquido}
+                difalValor={r1.difal}
                 g={global_}
                 f={r1.federais}
                 icms={
@@ -939,7 +941,8 @@ export default function App() {
                 title="Memória de cálculo — Cenário 2 (ICMS + federais)"
                 base={c2.valorVenda}
                 icmsDestacado={r2.debitoVendaFilial}
-                icmsValor={r2.icmsGrupo}
+                icmsValor={r2.icmsGrupo - r2.difalFilial}
+                difalValor={r2.difalFilial}
                 g={global_}
                 f={r2.federais}
                 icms={
@@ -1043,7 +1046,8 @@ export default function App() {
                 title="Memória de cálculo — Cenário 3 (ICMS + federais)"
                 base={c3.valorVenda}
                 icmsDestacado={r3.debitoVendaFilial}
-                icmsValor={r3.icmsGrupo}
+                icmsValor={r3.icmsGrupo - r3.difalFilial}
+                difalValor={r3.difalFilial}
                 g={global_}
                 f={r3.federais}
                 icms={
@@ -1161,7 +1165,8 @@ export default function App() {
                 title="Memória de cálculo — Cenário 4 (RioComex, ICMS + federais)"
                 base={c4.valorVenda}
                 icmsDestacado={r4.debitoSaida}
-                icmsValor={r4.icmsRecolher}
+                icmsValor={r4.icmsProprio}
+                difalValor={r4.difalValor}
                 g={global_}
                 f={r4.federais}
                 icms={
