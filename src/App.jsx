@@ -210,6 +210,7 @@ export default function App() {
     valorTransferencia: 0,
     custoTransferencia: 70,
     valorVenda: 0,
+    difal: 8,
   });
 
   const [c3, setC3] = useState({
@@ -231,7 +232,6 @@ export default function App() {
 
   const ICMS_TRANSFER = 12;
   const ICMS_VENDA_FILIAL = 12;
-  const DIFAL_FILIAL = 8;
 
   const upd = (setter, field) => (v) =>
     setter((prev) => ({ ...prev, [field]: v }));
@@ -297,7 +297,7 @@ export default function App() {
 
     const creditoRecebidoFilial = debitoTransferencia;
     const debitoVendaFilial = c2.valorVenda * (ICMS_VENDA_FILIAL / 100);
-    const difalFilial = c2.valorVenda * (DIFAL_FILIAL / 100);
+    const difalFilial = c2.valorVenda * (c2.difal / 100);
     const icmsLiquidoFilial =
       debitoVendaFilial - creditoRecebidoFilial + difalFilial;
 
@@ -879,7 +879,7 @@ export default function App() {
             <strong>Mesma saída do Simples do cenário 1, agora com planejamento.</strong> Em vez de
             vender direto pela matriz, ela compra, transfere para filiais em SP (Mercado Livre /
             Shopee) e as filiais vendem ao consumidor final. ICMS de transferência e de venda fixos em
-            12%, DIFAL fixo em 8%. Federais apurados sobre a venda da filial (faturamento consolidado
+            12%. Federais apurados sobre a venda da filial (faturamento consolidado
             do grupo).
           </div>
           <div className="grid">
@@ -899,10 +899,10 @@ export default function App() {
               <div className="subgroup-label">Filial (SP) — venda</div>
               <div className="fields">
                 <CurrencyField label="Valor de venda da filial" value={c2.valorVenda} onChange={upd(setC2, "valorVenda")} />
+                <PercentField label="DIFAL" value={c2.difal} onChange={upd(setC2, "difal")} />
               </div>
               <div className="badges-row">
                 <FixedBadge label="ICMS venda" value={ICMS_VENDA_FILIAL} />
-                <FixedBadge label="DIFAL" value={DIFAL_FILIAL} />
               </div>
             </div>
             <div className="card">
@@ -967,7 +967,7 @@ export default function App() {
                     <div className="memoria-line">
                       ICMS débito (venda) = {fmtBRL(c2.valorVenda)} × {fmtPct(ICMS_VENDA_FILIAL)} = {fmtBRL(r2.debitoVendaFilial)}
                     </div>
-                    <div className="memoria-line">DIFAL = {fmtBRL(c2.valorVenda)} × {fmtPct(DIFAL_FILIAL)} = {fmtBRL(r2.difalFilial)}</div>
+                    <div className="memoria-line">DIFAL = {fmtBRL(c2.valorVenda)} × {fmtPct(c2.difal)} = {fmtBRL(r2.difalFilial)}</div>
                     <div className="memoria-line">
                       ICMS crédito (recebido na transf.) = {fmtBRL(r2.creditoRecebidoFilial)}
                     </div>
