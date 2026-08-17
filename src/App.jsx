@@ -71,15 +71,6 @@ function FixedBadge({ label, value, note }) {
   );
 }
 
-function ReqBadge({ label }) {
-  return (
-    <div className="badge">
-      <span className="badge-dot req-dot" />
-      <span className="badge-label">{label}</span>
-    </div>
-  );
-}
-
 function Row({ label, value, sub, strong, negative }) {
   return (
     <div className={`row ${strong ? "row-strong" : ""}`}>
@@ -187,7 +178,6 @@ function MemoriaCompleta({ title, icms, base, icmsDestacado, icmsValor, difalVal
 // ---------- App ----------
 export default function App() {
   const [tab, setTab] = useState(1);
-  const [showParams, setShowParams] = useState(false);
 
   const [global_, setGlobal] = useState({
     presuncaoIRPJ: 8,
@@ -727,29 +717,6 @@ export default function App() {
             </div>
           </div>
         ))}
-      </div>
-
-      <div className="card globals-card">
-        <div className="card-title-row" onClick={() => setShowParams(!showParams)}>
-          <span className="card-title">PARÂMETROS GERAIS — LUCRO PRESUMIDO (COMÉRCIO)</span>
-          <span className="card-title-toggle">{showParams ? "ocultar ▴" : "editar ▾"}</span>
-        </div>
-        {showParams && (
-          <>
-            <div className="globals-row">
-              <PercentField label="Presunção IRPJ" value={global_.presuncaoIRPJ} onChange={upd(setGlobal, "presuncaoIRPJ")} hint="8% comércio/indústria" />
-              <PercentField label="Presunção CSLL" value={global_.presuncaoCSLL} onChange={upd(setGlobal, "presuncaoCSLL")} hint="12% comércio/indústria" />
-              <CurrencyField label="Limite p/ adicional IRPJ" value={global_.limiteAdicionalIRPJ} onChange={upd(setGlobal, "limiteAdicionalIRPJ")} hint="R$20.000/mês (R$60k/trim.)" />
-              <CurrencyField label="Limite majoração (mensal)" value={global_.limiteMajoracaoMensal} onChange={upd(setGlobal, "limiteMajoracaoMensal")} hint="LC 224/25: +10% s/ excedente 5mi/ano" />
-            </div>
-            <div className="badges-row">
-              <FixedBadge label="IRPJ" value={15} note="+10% acima do limite" />
-              <FixedBadge label="CSLL" value={9} />
-              <FixedBadge label="PIS" value={0.65} note="cumulativo" />
-              <FixedBadge label="COFINS" value={3} note="cumulativo" />
-            </div>
-          </>
-        )}
       </div>
 
       <div className="tabs">
