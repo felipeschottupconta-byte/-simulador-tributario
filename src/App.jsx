@@ -221,15 +221,6 @@ export default function App() {
     difal: 6.79,
   });
 
-  const [c4, setC4] = useState({
-    valorImportacao: 0,
-    valorVenda: 200000,
-    aliquotaVenda: 15,
-    creditoPresumidoPct: 70,
-    difal: 8,
-    pisoMinimo: 0,
-  });
-
   const ICMS_TRANSFER = 12;
   const ICMS_VENDA_FILIAL = 12;
 
@@ -356,40 +347,10 @@ export default function App() {
     };
   }, [c3, global_]);
 
-  const r4 = useMemo(() => {
-    // Diferimento no desembaraço (art. 4º, I): não há pagamento no momento da
-    // importação, logo não há crédito de entrada (crédito de entrada = R$0).
-    const debitoSaida = c4.valorVenda * (c4.aliquotaVenda / 100);
-    const creditoPresumidoValor = debitoSaida * (c4.creditoPresumidoPct / 100);
-    const icmsProprio = debitoSaida - creditoPresumidoValor;
-    // DIFAL é devido ao estado de destino e NÃO é reduzido pelo crédito
-    // presumido do RioComex (esse benefício só alcança o ICMS próprio do RJ).
-    const difalValor = c4.valorVenda * (c4.difal / 100);
-    const icmsRecolher = icmsProprio + difalValor;
-    const abaixoDoPiso = c4.pisoMinimo > 0 && icmsRecolher < c4.pisoMinimo;
-    const federais = calcFederais(c4.valorVenda, debitoSaida, global_);
-    const total = icmsRecolher + federais.total;
-    const carga = c4.valorVenda > 0 ? (total / c4.valorVenda) * 100 : 0;
-    const margem = c4.valorVenda - c4.valorImportacao - total;
-    return {
-      debitoSaida,
-      creditoPresumidoValor,
-      icmsProprio,
-      difalValor,
-      icmsRecolher,
-      abaixoDoPiso,
-      federais,
-      total,
-      carga,
-      margem,
-    };
-  }, [c4, global_]);
-
   const comparativo = [
     { n: 1, label: "Presumido sem filial", carga: r1.carga },
     { n: 2, label: "Com filiais SP", carga: r2.carga },
     { n: 3, label: "Lei da Moda", carga: r3.carga },
-    { n: 4, label: "RioComex", carga: r4.carga },
   ];
   const maxCarga = Math.max(1, ...comparativo.map((c) => c.carga || 0));
 
@@ -397,7 +358,6 @@ export default function App() {
     1: "Presumido sem filial",
     2: "Com filiais SP",
     3: "Lei da Moda",
-    4: "RioComex",
   };
 
   return (
@@ -523,6 +483,7 @@ export default function App() {
         }
         .globals-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
         .globals-row .field { width: 172px; }
+        .globals-row .field:last-child { width: 260px; }
         .globals-row .field-label { min-height: 32px; display: flex; align-items: flex-end; }
         .badges-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
         .badge {
@@ -745,7 +706,7 @@ export default function App() {
         <h1>Comparativo de regime — Lucro Presumido</h1>
         <p className="topbar-sub">
           Todos os cenários partem da mesma saída do Simples Nacional. O 1 é a referência, sem
-          nenhuma estrutura adicional; do 2 ao 4 são alternativas de planejamento sobre essa mesma
+          nenhuma estrutura adicional; do 2 ao 3 são alternativas de planejamento sobre essa mesma
           base.
         </p>
       </div>
@@ -779,7 +740,7 @@ export default function App() {
               <PercentField label="Presunção IRPJ" value={global_.presuncaoIRPJ} onChange={upd(setGlobal, "presuncaoIRPJ")} hint="8% comércio/indústria" />
               <PercentField label="Presunção CSLL" value={global_.presuncaoCSLL} onChange={upd(setGlobal, "presuncaoCSLL")} hint="12% comércio/indústria" />
               <CurrencyField label="Limite p/ adicional IRPJ" value={global_.limiteAdicionalIRPJ} onChange={upd(setGlobal, "limiteAdicionalIRPJ")} hint="R$20.000/mês (R$60k/trim.)" />
-              <CurrencyField label="Limite majoração (mensal)" value={global_.limiteMajoracaoMensal} onChange={upd(setGlobal, "limiteMajoracaoMensal")} hint="LC 224/2025: R$5mi/ano ÷ 12" />
+              <CurrencyField label="Limite majoração (mensal)" value={global_.limiteMajoracaoMensal} onChange={upd(setGlobal, "limiteMajoracaoMensal")} hint="LC 224/25: +10% s/ excedente 5mi/ano" />
             </div>
             <div className="badges-row">
               <FixedBadge label="IRPJ" value={15} note="+10% acima do limite" />
@@ -792,7 +753,7 @@ export default function App() {
       </div>
 
       <div className="tabs">
-        {[1, 2, 3, 4].map((n) => (
+        {[1, 2, 3].map((n) => (
           <div key={n} className={`tab ${tab === n ? "active" : ""}`} onClick={() => setTab(n)}>
             {n}. {scenarioLabels[n]}
           </div>
@@ -805,7 +766,7 @@ export default function App() {
             <strong>Ponto de partida.</strong> Saída do Simples hoje, sem nenhuma estrutura ou
             planejamento adicional — operação direta pela matriz, sem filiais. ICMS líquido = débito
             de saída − crédito de compra; DIFAL sobre o faturamento; federais apurados pela
-            sistemática do Lucro Presumido (presunção × alíquota). Os cenários 2 a 4 são alternativas
+            sistemática do Lucro Presumido (presunção × alíquota). Os cenários 2 e 3 são alternativas
             de planejamento a partir dessa mesma base.
           </div>
           <div className="grid">
@@ -1079,125 +1040,6 @@ export default function App() {
               />
               <div className="kpi-row">
                 <StatCard label="CARGA EFETIVA" value={fmtPct(r3.carga)} tone="neutral" />
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-
-      {tab === 4 && (
-        <>
-          <div className="scenario-note">
-            Matriz no RJ importa e vende direto ao consumidor final (sem filial/CD) — enquadramento no
-            art. 4º, II da Lei 11.192/2026: crédito presumido de até 70% nas saídas interestaduais.
-            O ICMS da importação fica diferido no desembaraço (art. 4º, I), então não gera crédito de
-            entrada — o desconto vem inteiramente do crédito presumido sobre o débito da venda. Sem
-            filial/CD própria, as reduções de base das alíneas do inciso III não se aplicam (são
-            desenhadas para transferência a CD/filial da própria empresa).
-          </div>
-          <div className="grid">
-            <div className="card">
-              <div className="panel-title">Entradas</div>
-              <div className="subgroup-label">Matriz importadora (RJ)</div>
-              <div className="fields">
-                <CurrencyField
-                  label="Valor de importação"
-                  value={c4.valorImportacao}
-                  onChange={upd(setC4, "valorImportacao")}
-                  hint="ICMS diferido no desembaraço — não gera crédito de entrada"
-                />
-              </div>
-              <div className="subgroup-label">Venda ao consumidor final (interestadual)</div>
-              <div className="fields">
-                <CurrencyField label="Valor de venda" value={c4.valorVenda} onChange={upd(setC4, "valorVenda")} />
-                <PercentField label="Alíquota de venda (interestadual)" value={c4.aliquotaVenda} onChange={upd(setC4, "aliquotaVenda")} />
-                <PercentField
-                  label="Crédito presumido"
-                  value={c4.creditoPresumidoPct}
-                  onChange={upd(setC4, "creditoPresumidoPct")}
-                  hint="teto legal 70% — % real vem do Termo de Acordo com a SEFAZ"
-                />
-                <PercentField label="DIFAL" value={c4.difal} onChange={upd(setC4, "difal")} hint="não é reduzido pelo crédito presumido" />
-                <CurrencyField
-                  label="Piso mínimo mensal (opcional)"
-                  value={c4.pisoMinimo}
-                  onChange={upd(setC4, "pisoMinimo")}
-                  hint="média de ICMS dos últimos 12 meses (art. 8º, II)"
-                />
-              </div>
-              <div className="subgroup-label">Requisitos de elegibilidade</div>
-              <div className="badges-row">
-                <ReqBadge label="Não pode ser Simples Nacional" />
-                <ReqBadge label="Radar Siscomex ilimitado" />
-                <ReqBadge label="Desembaraço em porto/aeroporto do RJ" />
-                <ReqBadge label="Sem filial/CD (venda direta)" />
-              </div>
-            </div>
-            <div className="card">
-              <div className="panel-title">Apuração</div>
-              <div className="subgroup-label">Cálculo do ICMS</div>
-              <div className="results">
-                <Row label="ICMS diferido na importação" value={0} sub="(crédito de entrada = R$0, art. 4º, I)" />
-                <Row label="Venda (interestadual)" value={c4.valorVenda} sub="ponto de partida" />
-                <Row label="× Alíquota de venda" value={`${c4.aliquotaVenda}%`} />
-                <Row label="= Débito ICMS (venda interestadual)" value={r4.debitoSaida} strong />
-                <Row label="× Crédito presumido" value={`${c4.creditoPresumidoPct}%`} />
-                <Row label="= Crédito presumido (valor)" value={-r4.creditoPresumidoValor} negative strong />
-                <Row label="ICMS próprio a recolher (débito − crédito)" value={r4.icmsProprio} strong />
-                <Row label="DIFAL" value={r4.difalValor} sub={`= venda × ${c4.difal}% (sem redução)`} />
-                <Row label="ICMS a recolher (próprio + DIFAL)" value={r4.icmsRecolher} strong />
-              </div>
-              <div className="subgroup-label">Federais</div>
-              <div className="results">
-                <Row label="IRPJ (normal + adicional)" value={r4.federais.irpjTotal} />
-                <Row label="CSLL" value={r4.federais.csll} />
-                <Row label="PIS" value={r4.federais.pis} />
-                <Row label="COFINS" value={r4.federais.cofins} />
-                <Row label="TOTAL DE TRIBUTOS" value={r4.total} strong />
-              </div>
-              {r4.abaixoDoPiso && (
-                <div className="scenario-note" style={{ marginTop: 12, marginBottom: 0 }}>
-                  O ICMS a recolher ficou abaixo do piso mínimo mensal informado — o recolhimento
-                  efetivo não pode ficar abaixo da média dos últimos 12 meses (art. 8º, II).
-                </div>
-              )}
-              <MemoriaCompleta
-                title="Memória de cálculo — Cenário 4 (RioComex, ICMS + federais)"
-                base={c4.valorVenda}
-                icmsDestacado={r4.debitoSaida}
-                icmsValor={r4.icmsProprio}
-                difalValor={r4.difalValor}
-                g={global_}
-                f={r4.federais}
-                icms={
-                  <>
-                    <div className="memoria-line">
-                      Importação: ICMS diferido no desembaraço (art. 4º, I) → crédito de entrada = R$ 0,00
-                    </div>
-                    <div className="memoria-line memoria-gap">
-                      Débito da saída = {fmtBRL(c4.valorVenda)} × {fmtPct(c4.aliquotaVenda)} = {fmtBRL(r4.debitoSaida)}
-                    </div>
-                    <div className="memoria-line">
-                      Crédito presumido ({fmtPct(c4.creditoPresumidoPct)}) = {fmtBRL(r4.debitoSaida)} ×{" "}
-                      {fmtPct(c4.creditoPresumidoPct)} = {fmtBRL(r4.creditoPresumidoValor)}
-                    </div>
-                    <div className="memoria-line memoria-total">
-                      ICMS próprio = {fmtBRL(r4.debitoSaida)} − {fmtBRL(r4.creditoPresumidoValor)} = {fmtBRL(r4.icmsProprio)}
-                    </div>
-                    <div className="memoria-line memoria-gap">
-                      DIFAL = {fmtBRL(c4.valorVenda)} × {fmtPct(c4.difal)} = {fmtBRL(r4.difalValor)}
-                    </div>
-                    <div className="memoria-line-hint">
-                      DIFAL é devido ao estado de destino — o crédito presumido do RioComex não reduz essa parcela
-                    </div>
-                    <div className="memoria-line memoria-total">
-                      ICMS a recolher = {fmtBRL(r4.icmsProprio)} + {fmtBRL(r4.difalValor)} = {fmtBRL(r4.icmsRecolher)}
-                    </div>
-                  </>
-                }
-              />
-              <div className="kpi-row">
-                <StatCard label="CARGA EFETIVA" value={fmtPct(r4.carga)} tone="neutral" />
               </div>
             </div>
           </div>
